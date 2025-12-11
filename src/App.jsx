@@ -8,30 +8,35 @@ import {
   Image
 } from 'react-native';
 import { useState, useEffect } from 'react';
-import { card } from './components/Card'
+import getApi from './services/api.js';
 
 export default function App() {
   const [dados, setDados] = useState([])
   const [busca, setBusca] = useState(true)
+  const [error, setError] = useState("Erro ao buscar")
 
   useEffect(() => {
-    async function getApi() {
-      const res = await fetch("https://jsonplaceholder.typicode.com/photos")
-      const data = await res.json()
-      setDados(data)
-      setBusca(false)
+    async function fachApi() {
+      try {
+        let res = await getApi()
+        setDados(res)
+      } catch (error) {
+        setError(error)
+      }
     }
-    getApi()
-  }, [busca])
+    fachApi()
+
+    setBusca(false)
+  }, [])
 
   return (
     <View style={styles.container}>
-      
+
       <View style={styles.header}>
         <Text>New api</Text>
         {busca ? (<ActivityIndicator size={"large"} />) :
-          (<TouchableOpacity>
-            <Text onPress={() => setBusca(!dados)}>Buscar dados</Text>
+          (<TouchableOpacity onPress={async () => { setBusca(true); let res = await getApi(); setDados(res); setBusca(false); }}>
+            <Text>Buscar dados</Text>
           </TouchableOpacity>)}
       </View>
 
@@ -40,10 +45,10 @@ export default function App() {
         <View style={styles.cardContent}>
           {dados.map((dado) => {
             return (
-              <View style={card}>
+              <View style={styles.card}>
                 <Text>{dado.title}</Text>
-                <Image style={styles.img} source={{ url: dado.id }}/>
-                <Text style={styles.title}>{dados.title}</Text>
+                <Image style={styles.img} source={{ uri: dado.url }} />
+                <Text style={styles.title}>{dado.title}</Text>
               </View>
             )
           })}
